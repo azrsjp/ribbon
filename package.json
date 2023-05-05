@@ -1,0 +1,26 @@
+{
+  "name": "ribbon",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint --ext .ts,.js ./src --ignore-pattern '**/*.d.ts'",
+    "format": "prettier --write './src/**/*.+(js|ts|json)' '!./src/**/*.d.ts'"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.47.1",
+    "@typescript-eslint/parser": "^5.47.1",
+    "eslint": "^8.30.0",
+    "eslint-config-prettier": "^8.5.0",
+    "prettier": "^2.8.1",
+    "terser": "^5.16.1",
+    "typescript": "^4.9.3",
+    "vite": "^4.0.0"
+  },
+  "dependencies": {
+    "phaser": "^3.60.0"
+  }
+}

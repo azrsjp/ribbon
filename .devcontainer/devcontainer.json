@@ -1,0 +1,22 @@
+{
+  "name": "Ribbon",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-18",
+  "mounts": [
+    "source=ribbon-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+  ],
+  "features": {
+    "fish": "latest",
+    "ghcr.io/guiyomh/features/vim:0": {},
+    "ghcr.io/devcontainers-contrib/features/peco-asdf:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "pmneo.tsimporter",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  },
+  "postCreateCommand": "sudo chown node node_modules"
+}

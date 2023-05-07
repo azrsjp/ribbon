@@ -18,9 +18,15 @@ declare global {
 Window.prototype.onYouTubeIframeAPIReady = () => {
   console.log('[YoutubeAPI] onYoutubeIframeAPIReady');
   isYoutubePrepared = true;
+
+  if (onYoutubePrepared != null) {
+    onYoutubePrepared();
+    onYoutubePrepared = () => {};
+  }
 };
 
 let isYoutubePrepared = false;
+let onYoutubePrepared: () => void;
 const PlayerIDPrefix = 'youtube-player';
 const PlayerActivatorIDPrefix = 'youtube-player-activator';
 
@@ -54,46 +60,55 @@ export class YoutubePlayer {
       this.deletePlayer();
     }
 
-    // Prepare DOM for Youtube Player
-    const playerId = PlayerIDPrefix + this.uuid;
-    const playerActivatorId = PlayerActivatorIDPrefix + this.uuid;
-    this.createDOM(playerId, playerActivatorId);
-    this.startFadeAnimation();
+    const setup = () => {
+      // Prepare DOM for Youtube Player
+      const playerId = PlayerIDPrefix + this.uuid;
+      const playerActivatorId = PlayerActivatorIDPrefix + this.uuid;
+      this.createDOM(playerId, playerActivatorId);
+      this.startFadeAnimation();
 
-    // Replace target dom with iframe contains a video
-    this.player = new YT.Player(playerId, {
-      height: '0',
-      width: '0',
-      videoId: videoId,
-      playerVars: {
-        autoplay: 0,
-        controls: 0,
-        disablekb: 1,
-        iv_load_policy: 3,
-        loop: 0,
-        modestbranding: 1,
-        rel: 0,
-        showinfo: 1,
-        playsinline: 1,
-      },
-      events: {
-        onReady: () => {
-          this.onPlayerReady();
-          if (onReady) {
-            onReady();
-          }
+      // Replace target dom with iframe contains a video
+      this.player = new YT.Player(playerId, {
+        height: '0',
+        width: '0',
+        videoId: videoId,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          iv_load_policy: 3,
+          loop: 0,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 1,
+          playsinline: 1,
         },
-        onStateChange: (evt) => {
-          this.onPlayerStateChange(evt);
-          if (onStateChange) {
-            onStateChange(evt.data);
-          }
+        events: {
+          onReady: () => {
+            this.onPlayerReady();
+            if (onReady) {
+              onReady();
+            }
+          },
+          onStateChange: (evt) => {
+            this.onPlayerStateChange(evt);
+            if (onStateChange) {
+              onStateChange(evt.data);
+            }
+          },
+          onError: (evt) => {
+            this.onPlyerError(evt);
+          },
         },
-        onError: (evt) => {
-          this.onPlyerError(evt);
-        },
-      },
-    });
+      });
+    };
+
+    // まだYoutubeAPIの読み込みが終わっていない場合はそのタイミングまでセットアップを遅延する
+    if (YoutubePlayer.isPrepared) {
+      setup();
+    } else {
+      onYoutubePrepared = setup;
+    }
   }
 
   deletePlayer() {

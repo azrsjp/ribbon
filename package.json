@@ -11,6 +11,7 @@
     "format": "prettier --write './src/**/*.+(js|ts|json)' '!./src/**/*.d.ts'"
   },
   "devDependencies": {
+    "@types/youtube": "^0.0.47",
     "@typescript-eslint/eslint-plugin": "^5.47.1",
     "@typescript-eslint/parser": "^5.47.1",
     "eslint": "^8.30.0",

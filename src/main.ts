@@ -1,23 +1,16 @@
 import Phaser from 'phaser';
 
-const width = 608;
-const height = 1080;
+import {DebugSandBoxScene} from '@/Scene/Debug/DebugSandboxScene';
 
-class TestScene extends Phaser.Scene {
-  constructor() {
-    super('testScene');
-  }
-  preload() {
-    //
-  }
+const width = 1080;
+const height = 1920;
 
-  create() {
-    this.add
-      .text(width * 0.5, height * 0.5, 'Hello, world!')
-      .setOrigin(0.5, 0.5)
-      .setColor('black')
-      .setFontSize('18px');
-  }
+// 本番用シーンの登録
+let sceneList: Phaser.Types.Scenes.SceneType[] = [];
+
+// デバッグ用シーンの登録
+if (import.meta.env.DEV) {
+  sceneList = [DebugSandBoxScene, ...sceneList];
 }
 
 new Phaser.Game({
@@ -26,8 +19,10 @@ new Phaser.Game({
     width: width,
     height: height,
     parent: 'app',
+    mode: Phaser.Scale.ScaleModes.FIT,
   },
+  pixelArt: false,
   disableContextMenu: true,
-  backgroundColor: 0xdddddd,
-  scene: [TestScene],
+  transparent: true,
+  scene: sceneList,
 });

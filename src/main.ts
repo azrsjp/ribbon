@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 
+import {DebugLocalStorageScene} from '@/Scene/Debug/DebugLocalStorageScene';
 import {DebugSandBoxScene} from '@/Scene/Debug/DebugSandboxScene';
 
 const width = 1080;
@@ -10,7 +11,7 @@ let sceneList: Phaser.Types.Scenes.SceneType[] = [];
 
 // デバッグ用シーンの登録
 if (import.meta.env.DEV) {
-  sceneList = [DebugSandBoxScene, ...sceneList];
+  sceneList = [DebugSandBoxScene, DebugLocalStorageScene, ...sceneList];
 }
 
 new Phaser.Game({

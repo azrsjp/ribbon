@@ -1,7 +1,9 @@
 import {DebugGui} from '@/Debug/DebugGui';
 import {YoutubePlayer} from '@/Youtube/YoutubePlayer';
-import {Controller} from 'lil-gui';
 import Phaser from 'phaser';
+
+// @ts-ignore
+import {Controller} from 'lil-gui';
 
 const testVideoIds = ['F-F4CZoUoxg', '0NwfGNhQSVg', 'IZnrdGkG9yo', 'lJm-o5fxwU4'];
 

@@ -1,3 +1,4 @@
+// @ts-ignore
 import {GUI} from 'lil-gui';
 
 export class DebugGui {

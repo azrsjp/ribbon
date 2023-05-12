@@ -1,6 +1,9 @@
 import {ScoreBuilder} from '@/Scene/ScoreEditor/ScoreBuilder';
+import {ScoreInfoEditor} from '@/Scene/ScoreEditor/ScoreInfoEditor';
 import {SongRecourceList} from '@/Scene/ScoreEditor/SongRecource';
+import {VideoController} from '@/Scene/ScoreEditor/VideoController';
 import {SequencerEvent, SequencerView} from '@/Scene/ScoreEditor/View/SequencerView';
+import metoronome from '@/Scene/ScoreEditor/metoronome.wav';
 import {Amson} from '@/Score/ScoreTypes';
 import Phaser from 'phaser';
 
@@ -16,6 +19,8 @@ enum EditMode {
 
 export class ScoreEditorScene extends Phaser.Scene {
   private builder: ScoreBuilder;
+  private infoEditor: ScoreInfoEditor;
+  private videoController: VideoController;
   private sequencerView?: SequencerView;
   private editMode = EditMode.kSection;
   private elapsedSec = 0;
@@ -24,9 +29,17 @@ export class ScoreEditorScene extends Phaser.Scene {
     super(ScoreEditorScene.name);
 
     this.builder = new ScoreBuilder(SongRecourceList[0]);
+
+    this.infoEditor = new ScoreInfoEditor(this.builder.score);
+    this.infoEditor.setOnSongChanged(this.loadVideo.bind(this));
+
+    this.videoController = new VideoController(this.builder.score);
+    this.videoController.setOnMetronome(this.playMetoronomeSound.bind(this));
   }
 
   init() {
+    this.sound.pauseOnBlur = false; // フォーカスアウトしてもサウンドを鳴らす
+
     this.events.once('shutdown', this.shutdown.bind(this));
     this.input.keyboard?.on(
       Phaser.Input.Keyboard.Events.ANY_KEY_DOWN,
@@ -34,30 +47,51 @@ export class ScoreEditorScene extends Phaser.Scene {
     );
   }
 
-  preload() {}
+  preload() {
+    this.load.audio('metoronome', metoronome);
+  }
 
   create() {
     const marginHeight = (this.scale.height - SequencerView.fixedHeight) / 2;
     const bgRectMask = this.add
-      .rectangle(0, marginHeight, this.scale.width, this.scale.height - marginHeight * 2, 0xeeeeee)
+      .rectangle(0, marginHeight, 150, this.scale.height - marginHeight * 2, 0xffffff)
       .setOrigin(0)
+      .setAlpha(0.9)
       .on(Phaser.Input.Events.POINTER_WHEEL, this.onMouseWheelEvent.bind(this))
       .setInteractive({
         hitAreaCallback: Phaser.Geom.Rectangle.Contains,
         useHandCursor: true,
       })
-      .createBitmapMask();
+      .createGeometryMask();
 
     this.sequencerView = new SequencerView(this, 48, marginHeight, this.builder.score);
     this.sequencerView.setMask(bgRectMask);
     this.sequencerView.setCallback(this.onSequencerEvent.bind(this));
+
+    this.loadVideo();
   }
 
   update() {
+    this.elapsedSec = this.videoController.elapsedSec;
+    this.videoController.update();
     this.sequencerView?.scroll(this.elapsedSec);
   }
 
-  private shutdown() {}
+  private shutdown() {
+    this.infoEditor.terminate();
+    this.videoController.terminate();
+  }
+
+  private playMetoronomeSound() {
+    this.sound.play('metoronome');
+  }
+
+  private loadVideo() {
+    this.videoController.loadVideo(
+      parseInt(this.game.canvas.style.width),
+      parseInt(this.game.canvas.style.height)
+    );
+  }
 
   private onSequencerEvent(event: SequencerEvent, tick: number) {
     switch (event) {

@@ -52,20 +52,19 @@ export class ScoreEditorScene extends Phaser.Scene {
   }
 
   create() {
-    const marginHeight = (this.scale.height - SequencerView.fixedHeight) / 2;
-    const bgRectMask = this.add
-      .rectangle(0, marginHeight, 150, this.scale.height - marginHeight * 2, 0xffffff)
+    this.add
+      .rectangle(0, 0, this.scale.width, this.scale.height, 0xdddddd)
       .setOrigin(0)
-      .setAlpha(0.9)
+      .setAlpha(0)
       .on(Phaser.Input.Events.POINTER_WHEEL, this.onMouseWheelEvent.bind(this))
       .setInteractive({
         hitAreaCallback: Phaser.Geom.Rectangle.Contains,
         useHandCursor: true,
-      })
-      .createGeometryMask();
+      });
 
-    this.sequencerView = new SequencerView(this, 48, marginHeight, this.builder.score);
-    this.sequencerView.setMask(bgRectMask);
+    const marginHeight = (this.scale.height - SequencerView.fixedHeight) / 2;
+
+    this.sequencerView = new SequencerView(this, 0, marginHeight, this.builder.score);
     this.sequencerView.setCallback(this.onSequencerEvent.bind(this));
 
     this.loadVideo();

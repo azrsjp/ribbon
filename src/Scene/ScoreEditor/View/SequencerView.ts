@@ -32,7 +32,7 @@ export class SequencerView extends Phaser.GameObjects.Container {
     super(scene, x, y);
 
     this.amson = amson;
-    this.width = kCellSize;
+    this.width = 128;
     this.height = kCellSize * kCellCount;
 
     this.createObjects();
@@ -121,10 +121,19 @@ export class SequencerView extends Phaser.GameObjects.Container {
   }
 
   private createObjects() {
+    const offsetX = (this.width - kCellSize) * 0.5;
+
+    // マスクがコンテナの座標offsetを考慮しないのでlaneBgだけはこのコンテナにaddしないでポジションの手動設定をする
+    const mask = this.scene.add
+      .rectangle(this.x, this.y, this.width, this.height, 0xfffffff)
+      .setOrigin(0, 0)
+      .setAlpha(0.85)
+      .createGeometryMask();
+
     // セルの生成(スクロールするので2色分の余分なセルが必要。)
     for (let i = 0; i < kCellCount + 2; i++) {
       const cell = this.scene.add
-        .rectangle(0, 0, kCellSize, kCellSize, i % 2 == 0 ? 0xcccccc : 0xdddddd)
+        .rectangle(offsetX, 0, kCellSize, kCellSize, i % 2 == 0 ? 0xcccccc : 0xdddddd)
         .setOrigin(0)
         .on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
           if (this.isEditMode && this.callback != null) {
@@ -151,7 +160,8 @@ export class SequencerView extends Phaser.GameObjects.Container {
         .setInteractive({
           hitAreaCallback: Phaser.Geom.Rectangle.Contains,
           useHandCursor: true,
-        });
+        })
+        .setMask(mask);
 
       this.cellRects.push(cell);
     }
@@ -159,33 +169,33 @@ export class SequencerView extends Phaser.GameObjects.Container {
     // 一拍ごとの細い線を生成
     for (let i = 0; i < 16; ++i) {
       const beatLine = this.scene.add
-        .line(0, 0, 0, 0, kCellSize + 16, 0, 0x666666)
+        .line(offsetX, 0, 0, 0, kCellSize + 16, 0, 0x666666)
         .setLineWidth(3)
-        .setOrigin(0);
+        .setOrigin(0)
+        .setMask(mask);
       this.beatLines.push(beatLine);
     }
 
     // 1小節ごとの太い線を生成
     for (let i = 0; i < 4; ++i) {
       const barline = this.scene.add
-        .line(0, 0, 0, 0, kCellSize + 32, 0, 0x333333)
+        .line(offsetX, 0, 0, 0, kCellSize + 32, 0, 0x333333)
         .setLineWidth(5)
-        .setOrigin(0);
+        .setOrigin(0)
+        .setMask(mask);
       this.barLines.push(barline);
     }
 
     // 小節数を表示するテキストを生成
     for (let i = 0; i < 4; ++i) {
       const barNumberText = this.scene.add
-        .text(44, 0, '', {font: '32px Arial', color: '#333333'})
-        .setOrigin(0.5, 1);
+        .text(offsetX + 44, 0, '', {font: '32px Arial', color: '#333333'})
+        .setOrigin(0.5, 1)
+        .setMask(mask);
       this.barNumberTexts.push(barNumberText);
     }
 
-    this.add(this.cellRects);
-    this.add(this.beatLines);
-    this.add(this.barLines);
-    this.add(this.barNumberTexts);
+    this.add([...this.cellRects, ...this.beatLines, ...this.barLines, ...this.barNumberTexts]);
     this.scene.add.existing(this);
   }
 }

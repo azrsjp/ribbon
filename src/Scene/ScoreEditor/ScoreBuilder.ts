@@ -17,8 +17,9 @@ export class ScoreBuilder {
         endAtMs: resource.endAtMs,
       },
       notes: [],
-      events: [],
       sections: [],
+      appeals: [],
+      fevers: [],
     };
   }
 

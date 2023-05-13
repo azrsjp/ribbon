@@ -3,8 +3,9 @@ export namespace Amson {
   export type Structure = {
     info: Info;
     notes: Note[];
-    events: Event[];
     sections: Section[];
+    appeals: Appeal[];
+    fevers: Fever[];
   };
 
   export type Info = {
@@ -24,13 +25,17 @@ export namespace Amson {
     length: number; // 0: normal note; greater than zero (length in tick): long note
   };
 
-  export type Event = {
-    type: EventType;
+  export type Appeal = {
+    tick: number;
+  };
+
+  export type Fever = {
     tick: number;
   };
 
   export type Section = {
     type: LiveLaneType | FashionLaneType | DanceLaneType;
+    tick: number;
     lengthTick: number;
   };
 
@@ -38,12 +43,6 @@ export namespace Amson {
     Up,
     Right,
     Left,
-  }
-
-  export enum EventType {
-    Section,
-    SpecialAppeal,
-    FeverTime,
   }
 
   export enum StageType {

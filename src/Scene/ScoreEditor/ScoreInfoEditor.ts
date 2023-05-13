@@ -67,12 +67,17 @@ export class ScoreInfoEditor {
       gui.add(this.amson.info, 'mvId').listen().disable();
       gui.add(this.amson.info, 'startAtMs').listen();
       gui.add(this.amson.info, 'endAtMs').listen();
+      gui.add(this, 'youtube');
       gui.add(this, 'dump');
     });
   }
 
   private terminateScoreInfo() {
     DebugGui.deleteGui(kLilGuiTitle);
+  }
+
+  private youtube() {
+    window.open('https://www.youtube.com/watch?v=' + this.amson.info.mvId);
   }
 
   private dump() {

@@ -1,8 +1,7 @@
+import {EditorConstants} from '@/Scene/ScoreEditor/EditorConstants';
 import {Amson} from '@/Score/ScoreTypes';
 import Phaser from 'phaser';
 
-const kCellSize = 28;
-const kCellCount = 64; // 4/4小節における4小節を考え、1拍あたり4分割する
 const kNoteColors = new Map<Amson.NoteType, number[]>([
   [Amson.NoteType.Left, [0x9acd32, 0xc3e084]], // 通常ノーツの色、ロングノーツの持続色
   [Amson.NoteType.Up, [0xff6347, 0xffb5a8]],
@@ -33,18 +32,18 @@ export class SequencerView extends Phaser.GameObjects.Container {
 
     this.amson = amson;
     this.width = 128;
-    this.height = kCellSize * kCellCount;
+    this.height = EditorConstants.CellSize * EditorConstants.CellCount;
 
     this.createObjects();
     this.updateScroll();
   }
 
   static get fixedWidth() {
-    return kCellSize;
+    return EditorConstants.CellSize;
   }
 
   static get fixedHeight() {
-    return kCellSize * kCellCount;
+    return EditorConstants.CellSize * EditorConstants.CellCount;
   }
 
   scroll(elapsed: number) {
@@ -70,15 +69,15 @@ export class SequencerView extends Phaser.GameObjects.Container {
         const isLongNoteTail = note.tick != tick;
         cell.fillColor = kNoteColors.get(note.type)?.at(isLongNoteTail ? 1 : 0) ?? 0x999999;
       }
-      cell.setY(this.calcObjectY(i, kCellSize, kCellSize, 0));
+      cell.setY(this.calcObjectY(i, EditorConstants.CellSize, EditorConstants.CellSize, 0));
     });
 
     this.beatLines.forEach((line, i) => {
-      line.setY(this.calcObjectY(i, 0, 4 * kCellSize, -1));
+      line.setY(this.calcObjectY(i, 0, 4 * EditorConstants.CellSize, -1));
     });
 
     this.barLines.forEach((line, i) => {
-      line.setY(this.calcObjectY(i, 0, 16 * kCellSize, -1));
+      line.setY(this.calcObjectY(i, 0, 16 * EditorConstants.CellSize, -1));
     });
 
     this.barNumberTexts.forEach((text, i) => {
@@ -87,14 +86,14 @@ export class SequencerView extends Phaser.GameObjects.Container {
       const index = (i + currentBar) % this.barNumberTexts.length;
       this.barNumberTexts[index].text = (currentBar + i + 1).toString();
 
-      text.setY(this.calcObjectY(i, 0, 16 * kCellSize, -1));
+      text.setY(this.calcObjectY(i, 0, 16 * EditorConstants.CellSize, -1));
     });
   }
 
   private calcObjectY(index: number, height: number, interval: number, offset: number): number {
     const originY = this.height - interval * index - height; // 各オブジェクトの初期配置のY座標
     const cellDuration = 60 / this.amson.info.bpm / 4; // セル1つあたりにかかる時間(sec)
-    const scrollLength = (this.elapsed / cellDuration) * kCellSize + offset; // 経過時間時点でスクロールしている量(px)
+    const scrollLength = (this.elapsed / cellDuration) * EditorConstants.CellSize + offset; // 経過時間時点でスクロールしている量(px)
 
     const laneYFrom = -height * 2;
     const laneYTo = this.height;
@@ -121,7 +120,7 @@ export class SequencerView extends Phaser.GameObjects.Container {
   }
 
   private createObjects() {
-    const offsetX = (this.width - kCellSize) * 0.5;
+    const offsetX = (this.width - EditorConstants.CellSize) * 0.5;
 
     // マスクがコンテナの座標offsetを考慮しないのでlaneBgだけはこのコンテナにaddしないでポジションの手動設定をする
     const mask = this.scene.add
@@ -131,9 +130,15 @@ export class SequencerView extends Phaser.GameObjects.Container {
       .createGeometryMask();
 
     // セルの生成(スクロールするので2色分の余分なセルが必要。)
-    for (let i = 0; i < kCellCount + 2; i++) {
+    for (let i = 0; i < EditorConstants.CellCount + 2; i++) {
       const cell = this.scene.add
-        .rectangle(offsetX, 0, kCellSize, kCellSize, i % 2 == 0 ? 0xcccccc : 0xdddddd)
+        .rectangle(
+          offsetX,
+          0,
+          EditorConstants.CellSize,
+          EditorConstants.CellSize,
+          i % 2 == 0 ? 0xcccccc : 0xdddddd
+        )
         .setOrigin(0)
         .on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
           if (this.isEditMode && this.callback != null) {
@@ -169,7 +174,7 @@ export class SequencerView extends Phaser.GameObjects.Container {
     // 一拍ごとの細い線を生成
     for (let i = 0; i < 16; ++i) {
       const beatLine = this.scene.add
-        .line(offsetX, 0, 0, 0, kCellSize + 16, 0, 0x666666)
+        .line(offsetX, 0, 0, 0, EditorConstants.CellSize + 16, 0, 0x666666)
         .setLineWidth(3)
         .setOrigin(0)
         .setMask(mask);
@@ -179,7 +184,7 @@ export class SequencerView extends Phaser.GameObjects.Container {
     // 1小節ごとの太い線を生成
     for (let i = 0; i < 4; ++i) {
       const barline = this.scene.add
-        .line(offsetX, 0, 0, 0, kCellSize + 32, 0, 0x333333)
+        .line(offsetX, 0, 0, 0, EditorConstants.CellSize + 32, 0, 0x333333)
         .setLineWidth(5)
         .setOrigin(0)
         .setMask(mask);

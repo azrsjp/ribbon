@@ -1,4 +1,12 @@
 export namespace Amson {
+  export const Constants = {
+    SectionMax: 8,
+    AppealMax: 3,
+    FeverMax: 1,
+    AppealDuationSec: 7,
+    FeverDuraionSec: 10,
+  } as const;
+
   // inspired by bmson
   export type Structure = {
     info: Info;

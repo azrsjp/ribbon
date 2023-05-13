@@ -2,6 +2,7 @@ import {ScoreBuilder} from '@/Scene/ScoreEditor/ScoreBuilder';
 import {ScoreInfoEditor} from '@/Scene/ScoreEditor/ScoreInfoEditor';
 import {SongRecourceList} from '@/Scene/ScoreEditor/SongRecource';
 import {VideoController} from '@/Scene/ScoreEditor/VideoController';
+import {EventLane, EventLaneEvent} from '@/Scene/ScoreEditor/View/EventLane';
 import {SequencerEvent, SequencerView} from '@/Scene/ScoreEditor/View/SequencerView';
 import metoronome from '@/Scene/ScoreEditor/metoronome.wav';
 import {Amson} from '@/Score/ScoreTypes';
@@ -22,6 +23,7 @@ export class ScoreEditorScene extends Phaser.Scene {
   private infoEditor: ScoreInfoEditor;
   private videoController: VideoController;
   private sequencerView?: SequencerView;
+  private eventLane?: EventLane;
   private editMode = EditMode.kSection;
   private elapsedSec = 0;
 
@@ -67,6 +69,10 @@ export class ScoreEditorScene extends Phaser.Scene {
     this.sequencerView = new SequencerView(this, 0, marginHeight, this.builder.score);
     this.sequencerView.setCallback(this.onSequencerEvent.bind(this));
 
+    const eventLaneX = this.sequencerView.width + 32;
+    this.eventLane = new EventLane(this, eventLaneX, marginHeight, this.builder.score);
+    this.eventLane?.setOnEvent(this.onEventLaneEvent.bind(this));
+
     this.loadVideo();
   }
 
@@ -74,6 +80,7 @@ export class ScoreEditorScene extends Phaser.Scene {
     this.elapsedSec = this.videoController.elapsedSec;
     this.videoController.update();
     this.sequencerView?.scroll(this.elapsedSec);
+    this.eventLane?.scroll(this.elapsedSec);
   }
 
   private shutdown() {
@@ -109,6 +116,29 @@ export class ScoreEditorScene extends Phaser.Scene {
       case SequencerEvent.kSubLength:
         this.builder.subNoteLength(tick);
         break;
+    }
+  }
+
+  private onEventLaneEvent(event: EventLaneEvent, tick: number): boolean {
+    switch (event) {
+      case EventLaneEvent.kAddSection:
+        return this.builder.addSection(tick);
+      case EventLaneEvent.kAddSectionLength:
+        return this.builder.addSectionLength(tick);
+      case EventLaneEvent.kSubSectionLength:
+        return this.builder.subSectionLength(tick);
+      case EventLaneEvent.kToggleSectionType:
+        return this.builder.toggleSectionType(tick);
+      case EventLaneEvent.kRemoveSection:
+        return this.builder.removeSection(tick);
+      case EventLaneEvent.kAddAppeal:
+        return this.builder.addAppeal(tick);
+      case EventLaneEvent.kRemoveAppeal:
+        return this.builder.removeAppeal(tick);
+      case EventLaneEvent.kAddFever:
+        return this.builder.addFever(tick);
+      case EventLaneEvent.kRemoveFever:
+        return this.builder.removeFever(tick);
     }
   }
 

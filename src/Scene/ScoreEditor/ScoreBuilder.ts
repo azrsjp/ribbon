@@ -133,6 +133,32 @@ export class ScoreBuilder {
     return true;
   }
 
+  moveSection(tick: number, diffTick: number): boolean {
+    const found = this.amson.sections.find((section) => section.tick === tick);
+    if (found == null) {
+      return false;
+    }
+
+    const from = tick + diffTick;
+    const to = tick + diffTick + found.lengthTick;
+
+    if (!this.isValidDuration(from, to)) {
+      return false;
+    }
+
+    // checkRangeConflict()で正しくチェックするために一旦消す
+    this.removeSection(tick);
+    const conflict = !this.checkRangeConflict(from, to);
+
+    // コンフリクトしてたら元に戻す、そうでなければTickを伸ばしたSectionを追加
+    this.amson.sections.push({
+      type: found.type,
+      tick: conflict ? tick : tick + diffTick,
+      lengthTick: found.lengthTick,
+    });
+    return !conflict;
+  }
+
   toggleSectionType(tick: number): boolean {
     const found = this.amson.sections.find((section) => section.tick === tick);
     if (found == null) {
@@ -184,6 +210,30 @@ export class ScoreBuilder {
     return true;
   }
 
+  moveAppeal(tick: number, diffTick: number): boolean {
+    const found = this.amson.appeals.find((appeal) => appeal.tick === tick);
+    if (found == null) {
+      return false;
+    }
+
+    const from = tick + diffTick;
+    const to = tick + diffTick + this.utility.tickByDuration(Amson.Constants.AppealDuationSec);
+
+    if (!this.isValidDuration(from, to)) {
+      return false;
+    }
+
+    // checkRangeConflict()で正しくチェックするために一旦消す
+    this.removeAppeal(tick);
+    const conflict = !this.checkRangeConflict(from, to);
+
+    // コンフリクトしてたら元に戻す、そうでなければTickを伸ばしたSectionを追加
+    this.amson.appeals.push({
+      tick: conflict ? tick : tick + diffTick,
+    });
+    return !conflict;
+  }
+
   addFever(tick: number): boolean {
     // 上限チェック
     if (this.amson.fevers.length >= Amson.Constants.FeverMax) {
@@ -206,6 +256,30 @@ export class ScoreBuilder {
   removeFever(tick: number): boolean {
     this.amson.fevers = this.amson.fevers.filter((fever) => fever.tick !== tick);
     return true;
+  }
+
+  moveFever(tick: number, diffTick: number): boolean {
+    const found = this.amson.fevers.find((fever) => fever.tick === tick);
+    if (found == null) {
+      return false;
+    }
+
+    const from = tick + diffTick;
+    const to = tick + diffTick + this.utility.tickByDuration(Amson.Constants.FeverDuraionSec);
+
+    if (!this.isValidDuration(from, to)) {
+      return false;
+    }
+
+    // checkRangeConflict()で正しくチェックするために一旦消す
+    this.removeFever(tick);
+    const conflict = !this.checkRangeConflict(from, to);
+
+    // コンフリクトしてたら元に戻す、そうでなければTickを伸ばしたSectionを追加
+    this.amson.fevers.push({
+      tick: conflict ? tick : tick + diffTick,
+    });
+    return !conflict;
   }
 
   private findNote(tick: number) {

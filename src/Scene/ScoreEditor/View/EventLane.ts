@@ -8,11 +8,14 @@ export enum EventLaneEvent {
   kRemoveSection,
   kAddSectionLength,
   kSubSectionLength,
+  kMoveSection,
   kToggleSectionType,
   kAddAppeal,
   kRemoveAppeal,
+  kMoveAppeal,
   kAddFever,
   kRemoveFever,
+  kMoveFever,
 }
 
 const colorSection = 0x22a8f5;
@@ -22,7 +25,7 @@ const colorFever = 0x9acd32;
 export class EventLane extends Phaser.GameObjects.Container {
   private amson: Amson.Structure;
   private socoreUtility: ScoreUtility;
-  private onEvent?: (event: EventLaneEvent, tick: number) => boolean;
+  private onEvent?: (event: EventLaneEvent, tick: number, value?: number) => boolean;
   private elapsedSec = 0;
 
   private sections: [Phaser.GameObjects.Rectangle, number][] = [];
@@ -42,7 +45,7 @@ export class EventLane extends Phaser.GameObjects.Container {
     this.updateScroll();
   }
 
-  setOnEvent(onEvent: (event: EventLaneEvent, tick: number) => boolean) {
+  setOnEvent(onEvent: (event: EventLaneEvent, tick: number, value?: number) => boolean) {
     this.onEvent = onEvent;
   }
 
@@ -142,6 +145,8 @@ export class EventLane extends Phaser.GameObjects.Container {
       .createGeometryMask();
 
     for (let i = 0; i < Amson.Constants.SectionMax; ++i) {
+      let dragStartTick = 0;
+
       const sectionRect = this.scene.add
         .rectangle(0, 0, this.width, 1, colorSection)
         .on(Phaser.Input.Events.POINTER_WHEEL, (event: Phaser.Input.Pointer) => {
@@ -150,35 +155,58 @@ export class EventLane extends Phaser.GameObjects.Container {
         .on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
           this.onPointerDownSection(event, this.sections[i][1]);
         })
+        .on(Phaser.Input.Events.DRAG_START, (_pointer: Phaser.Input.Pointer) => {
+          dragStartTick = this.sections[i][1];
+        })
+        .on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer) => {
+          this.onDragObject(pointer, dragStartTick, this.sections[i], EventLaneEvent.kMoveSection);
+        })
         .setInteractive({
           hitAreaCallback: Phaser.Geom.Rectangle.Contains,
           useHandCursor: true,
+          draggable: true,
         });
-
-      this.scene.input.setDraggable(sectionRect);
       this.sections.push([sectionRect, 0]);
     }
     for (let i = 0; i < Amson.Constants.AppealMax; ++i) {
+      let dragStartTick = 0;
+
       const appealRect = this.scene.add
         .rectangle(0, 0, this.width, 1, colorAppeal)
         .on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
           this.onPointerDownAppeal(event, this.appeals[i][1]);
         })
+        .on(Phaser.Input.Events.DRAG_START, (_pointer: Phaser.Input.Pointer) => {
+          dragStartTick = this.appeals[i][1];
+        })
+        .on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer) => {
+          this.onDragObject(pointer, dragStartTick, this.appeals[i], EventLaneEvent.kMoveAppeal);
+        })
         .setInteractive({
           hitAreaCallback: Phaser.Geom.Rectangle.Contains,
           useHandCursor: true,
+          draggable: true,
         });
       this.appeals.push([appealRect, 0]);
     }
     for (let i = 0; i < Amson.Constants.FeverMax; ++i) {
+      let dragStartTick = 0;
+
       const feverRect = this.scene.add
         .rectangle(0, 0, this.width, 1, colorFever)
         .on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
           this.onPointerDownFever(event, this.fevers[i][1]);
         })
+        .on(Phaser.Input.Events.DRAG_START, (_pointer: Phaser.Input.Pointer) => {
+          dragStartTick = this.fevers[i][1];
+        })
+        .on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer) => {
+          this.onDragObject(pointer, dragStartTick, this.fevers[i], EventLaneEvent.kMoveFever);
+        })
         .setInteractive({
           hitAreaCallback: Phaser.Geom.Rectangle.Contains,
           useHandCursor: true,
+          draggable: true,
         });
       this.fevers.push([feverRect, 0]);
     }
@@ -260,6 +288,25 @@ export class EventLane extends Phaser.GameObjects.Container {
           : EventLaneEvent.kAddSectionLength;
 
       this.onEvent(event, tick);
+    }
+  }
+
+  private onDragObject(
+    pointer: Phaser.Input.Pointer,
+    dragStartAtTick: number,
+    target: [Phaser.GameObjects.Rectangle, number],
+    event: EventLaneEvent
+  ) {
+    const diffTickByDrag =
+      Math.floor((pointer.downY - pointer.worldY) / EditorConstants.CellSize) *
+      (this.amson.info.resolution / 4);
+
+    if (this.onEvent != null) {
+      const currentTick = target[1];
+      const processedTick = currentTick - dragStartAtTick; // すでにドラッグが反映されている分は余計なので除外
+      if (this.onEvent(event, currentTick, diffTickByDrag - processedTick)) {
+        target[1] = currentTick + diffTickByDrag - processedTick;
+      }
     }
   }
 

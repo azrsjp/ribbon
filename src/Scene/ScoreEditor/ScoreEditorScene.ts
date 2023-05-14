@@ -119,26 +119,32 @@ export class ScoreEditorScene extends Phaser.Scene {
     }
   }
 
-  private onEventLaneEvent(event: EventLaneEvent, tick: number): boolean {
+  private onEventLaneEvent(event: EventLaneEvent, tick: number, value?: number): boolean {
     switch (event) {
       case EventLaneEvent.kAddSection:
         return this.builder.addSection(tick);
+      case EventLaneEvent.kRemoveSection:
+        return this.builder.removeSection(tick);
       case EventLaneEvent.kAddSectionLength:
         return this.builder.addSectionLength(tick);
       case EventLaneEvent.kSubSectionLength:
         return this.builder.subSectionLength(tick);
+      case EventLaneEvent.kMoveSection:
+        return this.builder.moveSection(tick, value ?? 0);
       case EventLaneEvent.kToggleSectionType:
         return this.builder.toggleSectionType(tick);
-      case EventLaneEvent.kRemoveSection:
-        return this.builder.removeSection(tick);
       case EventLaneEvent.kAddAppeal:
         return this.builder.addAppeal(tick);
       case EventLaneEvent.kRemoveAppeal:
         return this.builder.removeAppeal(tick);
+      case EventLaneEvent.kMoveAppeal:
+        return this.builder.moveAppeal(tick, value ?? 0);
       case EventLaneEvent.kAddFever:
         return this.builder.addFever(tick);
       case EventLaneEvent.kRemoveFever:
         return this.builder.removeFever(tick);
+      case EventLaneEvent.kMoveFever:
+        return this.builder.moveFever(tick, value ?? 0);
     }
   }
 

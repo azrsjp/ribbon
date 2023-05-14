@@ -15,6 +15,14 @@ export class ScoreUtility {
     return (tick * (60.0 / this.amson.info.bpm)) / this.amson.info.resolution;
   }
 
+  durationSec(): number {
+    return (this.amson.info.endAtMs - this.amson.info.startAtMs) * 0.001;
+  }
+
+  durationMs(): number {
+    return this.amson.info.endAtMs - this.amson.info.startAtMs;
+  }
+
   totalNotes(): number {
     return this.amson.notes.length;
   }

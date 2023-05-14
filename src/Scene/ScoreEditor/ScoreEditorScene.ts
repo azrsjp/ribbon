@@ -14,16 +14,6 @@ import {Amson} from '@/Score/ScoreTypes';
 import {ScoreUtility} from '@/Score/ScoreUtility';
 import Phaser from 'phaser';
 
-enum EditMode {
-  kLeft,
-  kUp,
-  kRight,
-  kSection,
-  kAppeal,
-  kFever,
-  kLocked,
-}
-
 export class ScoreEditorScene extends Phaser.Scene {
   private builder: ScoreBuilder;
   private scoreUtility: ScoreUtility;
@@ -32,7 +22,7 @@ export class ScoreEditorScene extends Phaser.Scene {
   private videoController: VideoController;
   private sequencerView?: SequencerView;
   private eventLane?: EventLane;
-  private editMode = EditMode.kSection;
+  private currentNoteType = Amson.NoteType.Left;
   private elapsedSec = 0;
 
   constructor() {
@@ -91,6 +81,7 @@ export class ScoreEditorScene extends Phaser.Scene {
 
     this.sequencerView = new SequencerView(this, 0, marginHeight, this.builder.score);
     this.sequencerView.setCallback(this.onSequencerEvent.bind(this));
+    this.sequencerView?.setEditMode(true);
 
     const eventLaneX = this.sequencerView.width + 32;
     this.eventLane = new EventLane(this, eventLaneX, marginHeight, this.builder.score);
@@ -131,7 +122,7 @@ export class ScoreEditorScene extends Phaser.Scene {
   private onSequencerEvent(event: SequencerEvent, tick: number) {
     switch (event) {
       case SequencerEvent.kAddNote:
-        this.builder.addNote(tick, this.modeToNoteType(this.editMode));
+        this.builder.addNote(tick, this.currentNoteType);
         break;
       case SequencerEvent.kRemoveNote:
         this.builder.removeNote(tick);
@@ -195,16 +186,13 @@ export class ScoreEditorScene extends Phaser.Scene {
   private onKeyboardEvent(event: KeyboardEvent) {
     switch (event.code) {
       case 'ArrowLeft':
-        this.editMode = EditMode.kLeft;
-        this.sequencerView?.setEditMode(true);
+        this.currentNoteType = Amson.NoteType.Left;
         break;
       case 'ArrowUp':
-        this.editMode = EditMode.kUp;
-        this.sequencerView?.setEditMode(true);
+        this.currentNoteType = Amson.NoteType.Up;
         break;
       case 'ArrowRight':
-        this.editMode = EditMode.kRight;
-        this.sequencerView?.setEditMode(true);
+        this.currentNoteType = Amson.NoteType.Right;
         break;
       default:
         break;
@@ -246,19 +234,6 @@ export class ScoreEditorScene extends Phaser.Scene {
   private onVideoStateChange(event: YT.PlayerState) {
     if (event == YT.PlayerState.PAUSED) {
       this.elapsedSec = this.videoController.elapsedSec;
-    }
-  }
-
-  private modeToNoteType(mode: EditMode) {
-    switch (mode) {
-      case EditMode.kUp:
-        return Amson.NoteType.Up;
-      case EditMode.kLeft:
-        return Amson.NoteType.Left;
-      case EditMode.kRight:
-        return Amson.NoteType.Right;
-      default:
-        return Amson.NoteType.Up;
     }
   }
 }

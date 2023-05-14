@@ -1,3 +1,4 @@
+import {EditorConstants} from '@/Scene/ScoreEditor/EditorConstants';
 import {ScoreBuilder} from '@/Scene/ScoreEditor/ScoreBuilder';
 import {ScoreInfoEditor} from '@/Scene/ScoreEditor/ScoreInfoEditor';
 import {SongRecourceList} from '@/Scene/ScoreEditor/SongRecource';
@@ -6,6 +7,7 @@ import {EventLane, EventLaneEvent} from '@/Scene/ScoreEditor/View/EventLane';
 import {SequencerEvent, SequencerView} from '@/Scene/ScoreEditor/View/SequencerView';
 import metoronome from '@/Scene/ScoreEditor/metoronome.wav';
 import {Amson} from '@/Score/ScoreTypes';
+import {ScoreUtility} from '@/Score/ScoreUtility';
 import Phaser from 'phaser';
 
 enum EditMode {
@@ -20,6 +22,7 @@ enum EditMode {
 
 export class ScoreEditorScene extends Phaser.Scene {
   private builder: ScoreBuilder;
+  private scoreUtility: ScoreUtility;
   private infoEditor: ScoreInfoEditor;
   private videoController: VideoController;
   private sequencerView?: SequencerView;
@@ -31,6 +34,7 @@ export class ScoreEditorScene extends Phaser.Scene {
     super(ScoreEditorScene.name);
 
     this.builder = new ScoreBuilder(SongRecourceList[0]);
+    this.scoreUtility = new ScoreUtility(this.builder.score);
 
     this.infoEditor = new ScoreInfoEditor(this.builder.score);
     this.infoEditor.setOnSongChanged(this.loadVideo.bind(this));
@@ -57,14 +61,22 @@ export class ScoreEditorScene extends Phaser.Scene {
   }
 
   create() {
+    let elapsedAtDragStart = 0;
     this.add
       .rectangle(0, 0, this.scale.width, this.scale.height, 0xdddddd)
       .setOrigin(0)
       .setAlpha(0.1)
       .on(Phaser.Input.Events.POINTER_WHEEL, this.onMouseWheelEvent.bind(this))
+      .on(Phaser.Input.Events.DRAG_START, (_pointer: Phaser.Input.Pointer) => {
+        elapsedAtDragStart = this.elapsedSec;
+      })
+      .on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer) =>
+        this.onDrageBgEvent(pointer, elapsedAtDragStart)
+      )
       .setInteractive({
         hitAreaCallback: Phaser.Geom.Rectangle.Contains,
         useHandCursor: true,
+        draggable: true,
       });
 
     const marginHeight = (this.scale.height - SequencerView.fixedHeight) / 2;
@@ -176,10 +188,30 @@ export class ScoreEditorScene extends Phaser.Scene {
   }
 
   private onMouseWheelEvent(pointer: Phaser.Input.Pointer) {
-    const lengthSec = (this.builder.score.info.endAtMs - this.builder.score.info.startAtMs) * 0.001;
-    const diffSec = 1 * Math.sign(pointer.deltaY);
+    const lengthSec = this.scoreUtility.durationSec();
+    const diffSec =
+      -Math.sign(pointer.deltaY) *
+      this.scoreUtility.durationByTick(this.builder.score.info.resolution);
 
     this.elapsedSec = Phaser.Math.Clamp(this.elapsedSec + diffSec, 0, lengthSec);
+
+    // Videoの再生位置を連動させる
+    if (!this.videoController.isPlaying) {
+      this.videoController.elapsedSec = this.elapsedSec;
+    }
+  }
+
+  private onDrageBgEvent(pointer: Phaser.Input.Pointer, elapsedAtDragStart: number) {
+    const dragStartTick = this.scoreUtility.tickByDuration(elapsedAtDragStart);
+    const currentTick = this.scoreUtility.tickByDuration(this.elapsedSec);
+    const diffTickByDrag =
+      -Math.floor((pointer.downY - pointer.worldY) / EditorConstants.CellSize) *
+      (this.builder.score.info.resolution / 4);
+    const processedTick = currentTick - dragStartTick;
+
+    const diffSec = this.scoreUtility.durationByTick(diffTickByDrag - processedTick);
+    const durationSec = this.scoreUtility.durationSec();
+    this.elapsedSec = Phaser.Math.Clamp(this.elapsedSec + diffSec, 0, durationSec);
 
     // Videoの再生位置を連動させる
     if (!this.videoController.isPlaying) {

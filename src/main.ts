@@ -22,7 +22,7 @@ if (import.meta.env.DEV) {
   ];
 }
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   scale: {
     width: width,
@@ -34,4 +34,10 @@ new Phaser.Game({
   disableContextMenu: true,
   transparent: true,
   scene: sceneList,
+});
+
+// Canvasに触れた時にフォーカスする(Keyboardイベント発火しないワークアラウンド)
+game.canvas.setAttribute('tabindex', '0');
+game.canvas.addEventListener('mousedown', function () {
+  game.canvas.focus();
 });

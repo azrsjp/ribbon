@@ -27,3 +27,7 @@ body {
   margin: auto;
   position: absolute;
 }
+
+#app canvas:focus {
+  outline: none;
+}

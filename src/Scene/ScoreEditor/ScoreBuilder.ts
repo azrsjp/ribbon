@@ -176,8 +176,6 @@ export class ScoreBuilder {
         found.type = (found.type + 1) % (Object.keys(Amson.DanceLaneType).length / 2);
         break;
     }
-    console.log(found.type);
-
     return true;
   }
 

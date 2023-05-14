@@ -36,6 +36,7 @@ export class ScoreBuilder {
     const found = this.findNote(tick);
     if (found == null) {
       this.amson.notes.push({tick: tick, type: type, length: 0});
+      this.amson.notes.sort((a, b) => a.tick - b.tick);
     }
   }
 
@@ -92,6 +93,7 @@ export class ScoreBuilder {
       tick: tick,
       lengthTick: sectionLengthTick,
     });
+    this.amson.sections.sort((a, b) => a.tick - b.tick);
 
     return true;
   }
@@ -116,6 +118,7 @@ export class ScoreBuilder {
       tick: tick,
       lengthTick: conflict ? found.lengthTick : found.lengthTick + lengthToAdd,
     });
+    this.amson.sections.sort((a, b) => a.tick - b.tick);
 
     return !conflict;
   }
@@ -156,6 +159,7 @@ export class ScoreBuilder {
       tick: conflict ? tick : tick + diffTick,
       lengthTick: found.lengthTick,
     });
+    this.amson.sections.sort((a, b) => a.tick - b.tick);
     return !conflict;
   }
 
@@ -200,6 +204,7 @@ export class ScoreBuilder {
     }
 
     this.amson.appeals.push({tick: tick});
+    this.amson.appeals.sort((a, b) => a.tick - b.tick);
     return true;
   }
 
@@ -229,6 +234,7 @@ export class ScoreBuilder {
     this.amson.appeals.push({
       tick: conflict ? tick : tick + diffTick,
     });
+    this.amson.appeals.sort((a, b) => a.tick - b.tick);
     return !conflict;
   }
 
@@ -248,6 +254,7 @@ export class ScoreBuilder {
     }
 
     this.amson.fevers.push({tick: tick});
+    this.amson.fevers.sort((a, b) => a.tick - b.tick);
     return true;
   }
 
@@ -277,6 +284,7 @@ export class ScoreBuilder {
     this.amson.fevers.push({
       tick: conflict ? tick : tick + diffTick,
     });
+    this.amson.fevers.sort((a, b) => a.tick - b.tick);
     return !conflict;
   }
 

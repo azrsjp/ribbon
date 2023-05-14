@@ -1,5 +1,9 @@
 import {EditorConstants} from '@/Scene/ScoreEditor/EditorConstants';
 import {ScoreBuilder} from '@/Scene/ScoreEditor/ScoreBuilder';
+import {
+  EditorControllerEvent,
+  ScoreEditorController,
+} from '@/Scene/ScoreEditor/ScoreEditorController';
 import {ScoreInfoEditor} from '@/Scene/ScoreEditor/ScoreInfoEditor';
 import {SongRecourceList} from '@/Scene/ScoreEditor/SongRecource';
 import {VideoController} from '@/Scene/ScoreEditor/VideoController';
@@ -24,6 +28,7 @@ export class ScoreEditorScene extends Phaser.Scene {
   private builder: ScoreBuilder;
   private scoreUtility: ScoreUtility;
   private infoEditor: ScoreInfoEditor;
+  private editController: ScoreEditorController;
   private videoController: VideoController;
   private sequencerView?: SequencerView;
   private eventLane?: EventLane;
@@ -38,6 +43,9 @@ export class ScoreEditorScene extends Phaser.Scene {
 
     this.infoEditor = new ScoreInfoEditor(this.builder.score);
     this.infoEditor.setOnSongChanged(this.loadVideo.bind(this));
+
+    this.editController = new ScoreEditorController(this.builder.score);
+    this.editController.setOnEvent(this.onEditorControllerEvent.bind(this));
 
     this.videoController = new VideoController(
       this.builder.score,
@@ -104,6 +112,7 @@ export class ScoreEditorScene extends Phaser.Scene {
 
   private shutdown() {
     this.infoEditor.terminate();
+    this.editController.terminate();
     this.videoController.terminate();
   }
 
@@ -165,6 +174,21 @@ export class ScoreEditorScene extends Phaser.Scene {
         return this.builder.removeFever(tick);
       case EventLaneEvent.kMoveFever:
         return this.builder.moveFever(tick, value ?? 0);
+    }
+  }
+
+  private onEditorControllerEvent(event: EditorControllerEvent) {
+    switch (event) {
+      case EditorControllerEvent.kToPutSectionMode:
+        return this.eventLane?.sectionPutMode();
+      case EditorControllerEvent.kToPutAppealMode:
+        return this.eventLane?.appealPutMode();
+      case EditorControllerEvent.kToPutFeverMode:
+        return this.eventLane?.feverPutMode();
+      case EditorControllerEvent.kNormalizeNotes:
+        return this.builder.normalizeNotes();
+      case EditorControllerEvent.kClearAllNotes:
+        return this.builder.clearAllNotes();
     }
   }
 

@@ -35,7 +35,10 @@ export class ScoreEditorScene extends Phaser.Scene {
     this.infoEditor = new ScoreInfoEditor(this.builder.score);
     this.infoEditor.setOnSongChanged(this.loadVideo.bind(this));
 
-    this.videoController = new VideoController(this.builder.score);
+    this.videoController = new VideoController(
+      this.builder.score,
+      this.onVideoStateChange.bind(this)
+    );
     this.videoController.setOnMetronome(this.playMetoronomeSound.bind(this));
   }
 
@@ -57,7 +60,7 @@ export class ScoreEditorScene extends Phaser.Scene {
     this.add
       .rectangle(0, 0, this.scale.width, this.scale.height, 0xdddddd)
       .setOrigin(0)
-      .setAlpha(0)
+      .setAlpha(0.1)
       .on(Phaser.Input.Events.POINTER_WHEEL, this.onMouseWheelEvent.bind(this))
       .setInteractive({
         hitAreaCallback: Phaser.Geom.Rectangle.Contains,
@@ -77,7 +80,11 @@ export class ScoreEditorScene extends Phaser.Scene {
   }
 
   update() {
-    this.elapsedSec = this.videoController.elapsedSec;
+    // Videoが再生されていたらそれを優先。止まっていたら手動スクロールの値を採用
+    this.elapsedSec = this.videoController.isPlaying
+      ? this.videoController.elapsedSec
+      : this.elapsedSec;
+
     this.videoController.update();
     this.sequencerView?.scroll(this.elapsedSec);
     this.eventLane?.scroll(this.elapsedSec);
@@ -93,6 +100,7 @@ export class ScoreEditorScene extends Phaser.Scene {
   }
 
   private loadVideo() {
+    this.elapsedSec = 0;
     this.videoController.loadVideo(
       parseInt(this.game.canvas.style.width),
       parseInt(this.game.canvas.style.height)
@@ -172,6 +180,17 @@ export class ScoreEditorScene extends Phaser.Scene {
     const diffSec = 1 * Math.sign(pointer.deltaY);
 
     this.elapsedSec = Phaser.Math.Clamp(this.elapsedSec + diffSec, 0, lengthSec);
+
+    // Videoの再生位置を連動させる
+    if (!this.videoController.isPlaying) {
+      this.videoController.elapsedSec = this.elapsedSec;
+    }
+  }
+
+  private onVideoStateChange(event: YT.PlayerState) {
+    if (event == YT.PlayerState.PAUSED) {
+      this.elapsedSec = this.videoController.elapsedSec;
+    }
   }
 
   private modeToNoteType(mode: EditMode) {

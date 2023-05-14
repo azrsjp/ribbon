@@ -11,10 +11,12 @@ export class VideoController {
   private player: YoutubePlayer = new YoutubePlayer();
   private playMetoronome = true;
   private onMetronome?: () => void = undefined;
+  private onStateChange?: (event: YT.PlayerState) => void;
 
-  constructor(amson: Amson.Structure) {
+  constructor(amson: Amson.Structure, onStateChange?: (event: YT.PlayerState) => void) {
     this.amson = amson;
     this.metronome = new Metronome(amson.info.bpm, amson.info.startAtMs);
+    this.onStateChange = onStateChange;
   }
 
   terminate() {
@@ -22,14 +24,18 @@ export class VideoController {
   }
 
   loadVideo(width: number, height: number) {
-    this.player.createPlayer(this.amson.info.mvId, () => {
-      this.player.setVideoSize(width, height);
+    this.player.createPlayer(
+      this.amson.info.mvId,
+      () => {
+        this.player.setVideoSize(width, height);
 
-      this.metronome = new Metronome(this.amson.info.bpm, this.amson.info.startAtMs);
-      this.metronome.setCurrent(this.player.getCurrentTime());
+        this.metronome = new Metronome(this.amson.info.bpm, this.amson.info.startAtMs);
+        this.metronome.setCurrent(this.player.getCurrentTime());
 
-      this.initializePlayer();
-    });
+        this.initializePlayer();
+      },
+      this.onStateChange
+    );
   }
 
   setOnMetronome(onMetronome: () => void) {
@@ -63,6 +69,10 @@ export class VideoController {
 
   get elapsedSec(): number {
     return Math.max(0, this.currentTime - this.amson.info.startAtMs / 1000);
+  }
+
+  set elapsedSec(value: number) {
+    this.player.seekTo(value + this.amson.info.startAtMs / 1000, true);
   }
 
   private get currentTime(): number {

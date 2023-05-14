@@ -32,6 +32,31 @@ export class ScoreBuilder {
     return this.amson;
   }
 
+  normalizeNotes(): number {
+    const noteNum = this.amson.notes.length;
+    this.amson.notes = this.amson.notes
+      .filter(
+        // セクション外除外
+        (note) => this.isInSectionRange(note.tick, note.length)
+      )
+      .filter(
+        //重複除外
+        (x, i, self) => self.findIndex((y) => x.tick === y.tick && x.length === y.length) === i
+      )
+      .sort((a, b) => a.tick - b.tick)
+      .filter(
+        // 重なるレンジのノーツを削除
+        (x, i, self) => self.findIndex((y, j) => j < i && y.tick + y.length > x.tick) === -1
+      );
+
+    // 削除された件数を返却
+    return noteNum - this.amson.notes.length;
+  }
+
+  clearAllNotes() {
+    this.amson.notes = [];
+  }
+
   isValidScore(): boolean {
     const sectionCountCheck =
       1 <= this.amson.sections.length && this.amson.sections.length <= Amson.Constants.SectionMax;

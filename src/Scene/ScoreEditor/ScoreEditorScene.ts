@@ -9,7 +9,6 @@ import {SongRecourceList} from '@/Scene/ScoreEditor/SongRecource';
 import {VideoController} from '@/Scene/ScoreEditor/VideoController';
 import {EventLane, EventLaneEvent} from '@/Scene/ScoreEditor/View/EventLane';
 import {SequencerEvent, SequencerView} from '@/Scene/ScoreEditor/View/SequencerView';
-import metoronome from '@/Scene/ScoreEditor/metoronome.wav';
 import {Amson} from '@/Score/ScoreTypes';
 import {ScoreUtility} from '@/Score/ScoreUtility';
 import Phaser from 'phaser';
@@ -55,7 +54,7 @@ export class ScoreEditorScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.audio('metoronome', metoronome);
+    this.load.audio('metoronome', '/assets/audio/metronome.wav');
   }
 
   create() {

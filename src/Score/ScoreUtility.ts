@@ -8,16 +8,10 @@ export class ScoreUtility {
   }
 
   tickByDuration(elapsedSec: number): number {
-    if (elapsedSec < 0) {
-      return 0;
-    }
     return elapsedSec * (this.amson.info.bpm / 60.0) * this.amson.info.resolution;
   }
 
   durationByTick(tick: number): number {
-    if (tick < 0) {
-      return 0;
-    }
     return (tick * (60.0 / this.amson.info.bpm)) / this.amson.info.resolution;
   }
 

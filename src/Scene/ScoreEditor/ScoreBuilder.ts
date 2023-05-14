@@ -32,9 +32,29 @@ export class ScoreBuilder {
     return this.amson;
   }
 
+  isValidScore(): boolean {
+    const sectionCountCheck =
+      1 <= this.amson.sections.length && this.amson.sections.length <= Amson.Constants.SectionMax;
+    const appealCountCheck = this.amson.appeals.length === Amson.Constants.AppealMax;
+    const feverCountCheck = this.amson.fevers.length === Amson.Constants.FeverMax;
+    const noteRangeCheck = this.amson.notes.filter(
+      (note) => !this.isInSectionRange(note.tick, note.length)
+    );
+
+    return (
+      sectionCountCheck &&
+      appealCountCheck &&
+      feverCountCheck &&
+      noteRangeCheck.length === 0 &&
+      this.eventNonOverlappingCheck() &&
+      this.notesNonOverlappingCheck()
+    );
+  }
+
   addNote(tick: number, type: Amson.NoteType) {
+    const isValidDuration = this.isValidDuration(tick, tick);
     const found = this.findNote(tick);
-    if (found == null) {
+    if (isValidDuration && found == null) {
       this.amson.notes.push({tick: tick, type: type, length: 0});
       this.amson.notes.sort((a, b) => a.tick - b.tick);
     }
@@ -61,8 +81,10 @@ export class ScoreBuilder {
       const conflictNote = this.amson.notes.find((note) => {
         return from < note.tick && note.tick <= to;
       });
+      const isValidDuration = this.isValidDuration(tick, tick + found.length + lengthToAdd);
 
-      found.length = conflictNote == null ? found.length + lengthToAdd : found.length;
+      found.length =
+        conflictNote == null && isValidDuration ? found.length + lengthToAdd : found.length;
     }
   }
 
@@ -341,6 +363,42 @@ export class ScoreBuilder {
       }
     }
 
+    return true;
+  }
+
+  private isInSectionRange(tick: number, lengthTick: number): boolean {
+    const rangeFound = this.amson.sections.find(
+      (section) => section.tick <= tick && tick + lengthTick < section.tick + section.lengthTick
+    );
+    return rangeFound != null;
+  }
+
+  private eventNonOverlappingCheck(): boolean {
+    const appealDurationTick = this.utility.tickByDuration(Amson.Constants.AppealDuationSec);
+    const feverDurationTick = this.utility.tickByDuration(Amson.Constants.FeverDuraionSec);
+
+    const ranges = [
+      ...this.amson.sections.map((section) => [section.tick, section.lengthTick]),
+      ...this.amson.appeals.map((appeal) => [appeal.tick, appealDurationTick]),
+      ...this.amson.fevers.map((fever) => [fever.tick, feverDurationTick]),
+    ].sort((a, b) => a[0] - b[0]);
+
+    for (let i = 0; i < ranges.length - 1; i++) {
+      if (ranges[i][0] + ranges[i][1] > ranges[i + 1][0]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private notesNonOverlappingCheck(): boolean {
+    const notes = this.amson.notes.sort((a, b) => a.tick - b.tick);
+
+    for (let i = 0; i < notes.length - 1; i++) {
+      if (notes[i].tick + notes[i].length > notes[i + 1].tick) {
+        return false;
+      }
+    }
     return true;
   }
 }
